@@ -29,6 +29,8 @@ Applyprivacy_node1758777392419 = Filter.apply(frame=AmazonS3_node1758777157518, 
 
 # Script generated for node Trusted Customers
 EvaluateDataQuality().process_rows(frame=Applyprivacy_node1758777392419, ruleset=DEFAULT_DATA_QUALITY_RULESET, publishing_options={"dataQualityEvaluationContext": "EvaluateDataQuality_node1758777106056", "enableDataQualityResultsPublishing": True}, additional_options={"dataQualityResultsPublishing.strategy": "BEST_EFFORT", "observations.scope": "ALL"})
-TrustedCustomers_node1758777515219 = glueContext.write_dynamic_frame.from_options(frame=Applyprivacy_node1758777392419, connection_type="s3", format="json", connection_options={"path": "s3://udacity-work/customer/trusted/", "partitionKeys": []}, transformation_ctx="TrustedCustomers_node1758777515219")
-
+TrustedCustomers_node1758777515219 = glueContext.getSink(path="s3://udacity-work/customer/trusted/", connection_type="s3", updateBehavior="UPDATE_IN_DATABASE", partitionKeys=[], enableUpdateCatalog=True, transformation_ctx="TrustedCustomers_node1758777515219")
+TrustedCustomers_node1758777515219.setCatalogInfo(catalogDatabase="stedi",catalogTableName="customer_trusted")
+TrustedCustomers_node1758777515219.setFormat("json")
+TrustedCustomers_node1758777515219.writeFrame(Applyprivacy_node1758777392419)
 job.commit()
