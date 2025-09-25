@@ -1,0 +1,45 @@
+import sys
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from awsgluedq.transforms import EvaluateDataQuality
+from awsglue import DynamicFrame
+
+def sparkSqlQuery(glueContext, query, mapping, transformation_ctx) -> DynamicFrame:
+    for alias, frame in mapping.items():
+        frame.toDF().createOrReplaceTempView(alias)
+    result = spark.sql(query)
+    return DynamicFrame.fromDF(result, glueContext, transformation_ctx)
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+# Default ruleset used by all target nodes with data quality enabled
+DEFAULT_DATA_QUALITY_RULESET = """
+    Rules = [
+        ColumnCount > 0
+    ]
+"""
+
+# Script generated for node accelerometer trusted
+accelerometertrusted_node1758805059758 = glueContext.create_dynamic_frame.from_catalog(database="stedi", table_name="accelerometer_trusted", transformation_ctx="accelerometertrusted_node1758805059758")
+
+# Script generated for node step trainer trusted
+steptrainertrusted_node1758805115944 = glueContext.create_dynamic_frame.from_catalog(database="stedi", table_name="step_trainer_trusted", transformation_ctx="steptrainertrusted_node1758805115944")
+
+# Script generated for node SQL Query
+SqlQuery0 = '''
+select acc.user,acc.x,acc.y,acc.z,step.* from step inner join acc on acc.timestamp=step.sensorreadingtime;
+'''
+SQLQuery_node1758805226065 = sparkSqlQuery(glueContext, query = SqlQuery0, mapping = {"step":steptrainertrusted_node1758805115944, "acc":accelerometertrusted_node1758805059758}, transformation_ctx = "SQLQuery_node1758805226065")
+
+# Script generated for node machine data
+EvaluateDataQuality().process_rows(frame=SQLQuery_node1758805226065, ruleset=DEFAULT_DATA_QUALITY_RULESET, publishing_options={"dataQualityEvaluationContext": "EvaluateDataQuality_node1758802446342", "enableDataQualityResultsPublishing": True}, additional_options={"dataQualityResultsPublishing.strategy": "BEST_EFFORT", "observations.scope": "ALL"})
+machinedata_node1758805491783 = glueContext.write_dynamic_frame.from_options(frame=SQLQuery_node1758805226065, connection_type="s3", format="json", connection_options={"path": "s3://udacity-work/machine/", "partitionKeys": []}, transformation_ctx="machinedata_node1758805491783")
+
+job.commit()
