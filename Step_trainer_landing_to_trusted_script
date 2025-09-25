@@ -35,12 +35,13 @@ customercurated_node1758794829169 = glueContext.create_dynamic_frame.from_option
 # Script generated for node SQL Query
 SqlQuery0 = '''
 select step.* from step inner join customer on step.serialnumber=customer.serialnumber;
-
 '''
 SQLQuery_node1758802781983 = sparkSqlQuery(glueContext, query = SqlQuery0, mapping = {"customer":customercurated_node1758794829169, "step":steptrainerlanding_node1758793890332}, transformation_ctx = "SQLQuery_node1758802781983")
 
 # Script generated for node step trainer trusted
 EvaluateDataQuality().process_rows(frame=SQLQuery_node1758802781983, ruleset=DEFAULT_DATA_QUALITY_RULESET, publishing_options={"dataQualityEvaluationContext": "EvaluateDataQuality_node1758793426082", "enableDataQualityResultsPublishing": True}, additional_options={"dataQualityResultsPublishing.strategy": "BEST_EFFORT", "observations.scope": "ALL"})
-steptrainertrusted_node1758794096941 = glueContext.write_dynamic_frame.from_options(frame=SQLQuery_node1758802781983, connection_type="s3", format="json", connection_options={"path": "s3://udacity-work/step_trainer/trusted/", "partitionKeys": []}, transformation_ctx="steptrainertrusted_node1758794096941")
-
+steptrainertrusted_node1758794096941 = glueContext.getSink(path="s3://udacity-work/step_trainer/trusted/", connection_type="s3", updateBehavior="UPDATE_IN_DATABASE", partitionKeys=[], enableUpdateCatalog=True, transformation_ctx="steptrainertrusted_node1758794096941")
+steptrainertrusted_node1758794096941.setCatalogInfo(catalogDatabase="stedi",catalogTableName="step_trainer_trusted")
+steptrainertrusted_node1758794096941.setFormat("json")
+steptrainertrusted_node1758794096941.writeFrame(SQLQuery_node1758802781983)
 job.commit()
