@@ -26,11 +26,11 @@ DEFAULT_DATA_QUALITY_RULESET = """
     ]
 """
 
-# Script generated for node accelerometer trusted
-accelerometertrusted_node1758805059758 = glueContext.create_dynamic_frame.from_catalog(database="stedi", table_name="accelerometer_trusted", transformation_ctx="accelerometertrusted_node1758805059758")
-
 # Script generated for node step trainer trusted
 steptrainertrusted_node1758805115944 = glueContext.create_dynamic_frame.from_catalog(database="stedi", table_name="step_trainer_trusted", transformation_ctx="steptrainertrusted_node1758805115944")
+
+# Script generated for node accelerometer trusted
+accelerometertrusted_node1758805059758 = glueContext.create_dynamic_frame.from_catalog(database="stedi", table_name="accelerometer_trusted", transformation_ctx="accelerometertrusted_node1758805059758")
 
 # Script generated for node SQL Query
 SqlQuery0 = '''
@@ -40,6 +40,8 @@ SQLQuery_node1758805226065 = sparkSqlQuery(glueContext, query = SqlQuery0, mappi
 
 # Script generated for node machine data
 EvaluateDataQuality().process_rows(frame=SQLQuery_node1758805226065, ruleset=DEFAULT_DATA_QUALITY_RULESET, publishing_options={"dataQualityEvaluationContext": "EvaluateDataQuality_node1758802446342", "enableDataQualityResultsPublishing": True}, additional_options={"dataQualityResultsPublishing.strategy": "BEST_EFFORT", "observations.scope": "ALL"})
-machinedata_node1758805491783 = glueContext.write_dynamic_frame.from_options(frame=SQLQuery_node1758805226065, connection_type="s3", format="json", connection_options={"path": "s3://udacity-work/machine/", "partitionKeys": []}, transformation_ctx="machinedata_node1758805491783")
-
+machinedata_node1758805491783 = glueContext.getSink(path="s3://udacity-work/machine/", connection_type="s3", updateBehavior="UPDATE_IN_DATABASE", partitionKeys=[], enableUpdateCatalog=True, transformation_ctx="machinedata_node1758805491783")
+machinedata_node1758805491783.setCatalogInfo(catalogDatabase="stedi",catalogTableName="machine_curated")
+machinedata_node1758805491783.setFormat("json")
+machinedata_node1758805491783.writeFrame(SQLQuery_node1758805226065)
 job.commit()
